@@ -22,7 +22,7 @@ spec:
     spec:
       containers:
         - name: payment-container
-          image: kubectlandchill/sales-payment-service:v1.0.0
+          image: kubectlandchill/sales-payment-service:v1.1.0
           ports:
             - containerPort: 3000
           envFrom:
