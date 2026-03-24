@@ -22,7 +22,7 @@ spec:
     spec:
       containers:
         - name: auth-container
-          image: kubectlandchill/sales-auth-service:v1.0.0
+          image: kubectlandchill/sales-auth-service:v1.1.0
           ports:
             - containerPort: 3000
           envFrom:

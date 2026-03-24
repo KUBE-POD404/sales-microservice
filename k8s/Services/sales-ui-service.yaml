@@ -8,8 +8,8 @@ metadata:
 spec:
   type: ClusterIP
   selector:
-    app: sales-ui-microservice
+    app: sales-ui
   ports:
     - port: 8000
-      targetPort: 8000
+      targetPort: 3000
       protocol: TCP
