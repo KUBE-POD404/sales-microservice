@@ -29,7 +29,7 @@ spec:
             limits:
               memory: "512Mi"
               cpu: "200Mi"
-            request:
+            requests:
               memory: "256Mi"
               cpu: "100Mi"
           envFrom:
