@@ -6,7 +6,7 @@ metadata:
   labels:
     app: sales-ui 
 spec:
-  type: NodePort
+  type: ClusterIP
   selector:
     app: sales-ui
   ports:
