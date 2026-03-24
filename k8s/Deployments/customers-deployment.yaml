@@ -23,6 +23,13 @@ spec:
       containers:
         - name: customers-container
           image: kubectlandchill/sales-customer-service:v1.1.0
+          resources:
+            limits:
+              memory: "512Mi"
+              cpu: "200m"
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
           ports:
             - containerPort: 3000
           envFrom:
