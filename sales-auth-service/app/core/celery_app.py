@@ -13,6 +13,9 @@ celery = Celery(
 )
 
 celery.conf.update(
+    task_routes={
+        "notification.send_signup_email": {"queue": "notification_queue"}
+    },
     task_serializer="json",
     accept_content=["json"],
     result_serializer="json",
