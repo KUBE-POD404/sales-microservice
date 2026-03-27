@@ -1,7 +1,7 @@
 from app.core.logging_config import setup_logging
 import os
 from fastapi import FastAPI
-from app.routers.auth import router as auth_router
+from app.routers.v1.auth import router as auth_router
 from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from app.exceptions.handlers import (
