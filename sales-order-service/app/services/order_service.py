@@ -8,14 +8,21 @@ from app.models.order_item import OrderItem
 from app.exceptions.custom_exceptions import NotFoundException, ConflictException
 from app.utils.service_client import authenticated_get
 
+from app.core.logging_config import get_logger
+
+
+from app.tasks.notification_tasks import (
+    send_order_created_notification,
+    send_order_confirmed_notification,
+    send_order_cancelled_notification
+)
+
+logger = get_logger(__name__)
+
 CUSTOMER_SERVICE_URL = os.getenv("CUSTOMER_SERVICE_URL")
 
 
-# -----------------------------
-# VALIDATE CUSTOMER
-# -----------------------------
 def validate_customer(customer_id: int, auth_header: str):
-
     response = authenticated_get(
         f"{CUSTOMER_SERVICE_URL}/customers/{customer_id}",
         auth_header
@@ -25,9 +32,6 @@ def validate_customer(customer_id: int, auth_header: str):
         raise NotFoundException("Customer not found")
 
 
-# -----------------------------
-# CREATE ORDER
-# -----------------------------
 def create_order(
     db: Session,
     customer_id: int,
@@ -36,6 +40,8 @@ def create_order(
     created_by_user_id: int,
     auth_header: str
 ) -> Order:
+
+    logger.info(f"Creating order for customer {customer_id}")
 
     validate_customer(customer_id, auth_header)
 
@@ -63,14 +69,19 @@ def create_order(
 
     db.commit()
 
+    logger.info(f"Order created with ID {order.id}")
+
+    # ✅ Async event (Celery)
+    send_order_created_notification.delay({
+        "order_id": order.id,
+        "customer_id": customer_id,
+        "organization_id": organization_id
+    })
+
     return get_order(db, order.id, organization_id)
 
 
-# -----------------------------
-# GET ORDER
-# -----------------------------
 def get_order(db: Session, order_id: int, organization_id: int) -> Order:
-
     order = (
         db.query(Order)
         .filter(
@@ -93,11 +104,7 @@ def get_order(db: Session, order_id: int, organization_id: int) -> Order:
     return order
 
 
-# -----------------------------
-# LIST ORDERS
-# -----------------------------
 def list_orders(db: Session, organization_id, offset=0, limit=15, status=None, customer_id=None):
-
     query = db.query(Order).filter(Order.organization_id == organization_id)
 
     if status:
@@ -114,7 +121,6 @@ def list_orders(db: Session, organization_id, offset=0, limit=15, status=None, c
     )
 
     for order in orders:
-
         items = db.query(OrderItem).filter(
             OrderItem.order_id == order.id
         ).all()
@@ -125,11 +131,7 @@ def list_orders(db: Session, organization_id, offset=0, limit=15, status=None, c
     return orders
 
 
-# -----------------------------
-# UPDATE ORDER
-# -----------------------------
 def update_order(db: Session, order_id: int, organization_id: int, items: list):
-
     order = get_order(db, order_id, organization_id)
 
     if order.status != "CREATED":
@@ -152,11 +154,7 @@ def update_order(db: Session, order_id: int, organization_id: int, items: list):
     return get_order(db, order.id, organization_id)
 
 
-# -----------------------------
-# CONFIRM ORDER
-# -----------------------------
 def confirm_order(db: Session, order_id: int, organization_id: int):
-
     order = get_order(db, order_id, organization_id)
 
     if order.status != "CREATED":
@@ -166,14 +164,16 @@ def confirm_order(db: Session, order_id: int, organization_id: int):
     db.commit()
     db.refresh(order)
 
+    logger.info(f"Order confirmed {order.id}")
+
+    send_order_confirmed_notification.delay({
+        "order_id": order.id
+    })
+
     return order
 
 
-# -----------------------------
-# CANCEL ORDER
-# -----------------------------
 def cancel_order(db: Session, order_id: int, organization_id: int):
-
     order = get_order(db, order_id, organization_id)
 
     if order.status == "CONFIRMED":
@@ -182,5 +182,11 @@ def cancel_order(db: Session, order_id: int, organization_id: int):
     order.status = "CANCELLED"
     db.commit()
     db.refresh(order)
+
+    logger.info(f"Order cancelled {order.id}")
+
+    send_order_cancelled_notification.delay({
+        "order_id": order.id
+    })
 
     return order
