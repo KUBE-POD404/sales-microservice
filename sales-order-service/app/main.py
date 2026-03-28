@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from app.routers import orders
+from app.routers.v1 import orders
 
 from app.exceptions.custom_exceptions import AppException
 from app.exceptions.handlers import (
@@ -12,6 +12,10 @@ from app.exceptions.handlers import (
     validation_exception_handler,
     generic_exception_handler
 )
+
+from app.core.logging_config import setup_logging
+
+setup_logging()
 
 if os.getenv("ENVIRONMENT") == "production":
     docs_url = None
@@ -29,11 +33,9 @@ app = FastAPI(
     openapi_url=openapi_url,
 )
 
-
-# Register exception handlers
 app.add_exception_handler(AppException, app_exception_handler)
 app.add_exception_handler(StarletteHTTPException, http_exception_handler)
 app.add_exception_handler(RequestValidationError, validation_exception_handler)
 app.add_exception_handler(Exception, generic_exception_handler)
 
-app.include_router(orders.router)
+app.include_router(orders.router, prefix="/api/v1")
