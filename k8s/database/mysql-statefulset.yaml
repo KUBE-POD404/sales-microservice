@@ -34,7 +34,13 @@ spec:
             - name: mysql-data
               mountPath: /var/lib/mysql
 
-      volumes:
-      - name: mysql-data
-        persistenVolumeClaim:
-          claimName: sales-pvc
+  volumeClaimTemplates:
+  - metadata:
+      name: mysql-data
+    spec:
+      storageClassName: sales-storageclass
+      accessModes:
+      - ReadWriteMany
+      resources:
+        requests:
+          storage: 5Gi
