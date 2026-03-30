@@ -9,9 +9,8 @@ do
 done
 
 echo "RabbitMQ is ready!"
-
 echo "Starting Celery worker..."
 
-celery -A app.core.celery_app.celery worker \
+celery -A app.core.celery_app worker \
   --loglevel=info \
   -Q notification_queue
