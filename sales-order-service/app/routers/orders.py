@@ -22,8 +22,8 @@ router = APIRouter(prefix="/orders", tags=["Orders"])
 def health():
     return {"status": "ok"}
 
-
-@router.post("/create-order", response_model=OrderResponse, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=OrderResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/", response_model=OrderResponse, status_code=status.HTTP_201_CREATED)
 def create_order_api(
     data: OrderCreate,
     request: Request,
@@ -56,7 +56,7 @@ def get_order_api(
         current_user.org_id
     )
 
-
+@router.get("", response_model=list[OrderResponse])
 @router.get("/", response_model=list[OrderResponse])
 def list_orders_api(
     page: int = Query(1, ge=1),

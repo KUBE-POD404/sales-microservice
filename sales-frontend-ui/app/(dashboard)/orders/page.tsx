@@ -258,7 +258,7 @@ export default function OrdersPage() {
                 toast.success("Order updated")
             } else {
                 // CREATE ORDER
-                const created = await apiFetch<Order>("/orders/create-order", {
+                const created = await apiFetch<Order>("/orders/", {
                     method: "POST",
                     body: JSON.stringify({
                         customer_id: Number(customerId),
