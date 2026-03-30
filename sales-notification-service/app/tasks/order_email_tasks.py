@@ -38,7 +38,6 @@ def send_order_created_email(self, payload):
     try:
         data = payload["payload"]
 
-        # ✅ Defensive validation
         email = data.get("email")
         customer_name = data.get("customer_name", "Customer")
         order_id = data.get("order_id")

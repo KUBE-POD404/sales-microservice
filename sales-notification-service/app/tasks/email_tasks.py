@@ -17,9 +17,9 @@ def send_signup_email(self, payload):
     logger.info(f"Received signup event: {payload}")
 
     try:
-        data = payload["data"]
+        data = payload["payload"]
 
-        subject = "Welcome to Opslora "
+        subject = "Welcome to Opslora"
 
         body = f"""
 Hello,
