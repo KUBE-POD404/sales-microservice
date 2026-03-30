@@ -14,6 +14,7 @@ from app.core.celery_app import celery
 logger = logging.getLogger(__name__)
 
 CUSTOMER_SERVICE_URL = os.getenv("CUSTOMER_SERVICE_URL")
+API_VERSION = os.getenv("API_VERSION", "/api/v1")
 
 
 # -----------------------------
@@ -21,11 +22,10 @@ CUSTOMER_SERVICE_URL = os.getenv("CUSTOMER_SERVICE_URL")
 # -----------------------------
 def fetch_customer(customer_id: int, auth_header: str):
 
-    response = authenticated_get(
-        f"{CUSTOMER_SERVICE_URL}/customers/{customer_id}",
-        auth_header
-    )
+    url = f"{CUSTOMER_SERVICE_URL}{API_VERSION}/customers/{customer_id}"
 
+    response = authenticated_get(url, auth_header)
+    logger.info("Calling customer service", extra={"url": url})
     if response.status_code != 200:
         raise NotFoundException("Customer not found")
 

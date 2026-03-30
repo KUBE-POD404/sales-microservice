@@ -135,8 +135,8 @@ export default function OrdersPage() {
             }
 
             const [ordersData, customersData, invoicesData] = await Promise.all([
-                apiFetch<Order[]>(`/orders?${params.toString()}`),
-                apiFetch<Customer[]>("/customers"),
+                apiFetch<Order[]>(`/orders/?${params.toString()}`),
+                apiFetch<Customer[]>("/customers/"),
                 apiFetch<Invoice[]>(`/invoices`)
             ])
 
@@ -258,7 +258,7 @@ export default function OrdersPage() {
                 toast.success("Order updated")
             } else {
                 // CREATE ORDER
-                const created = await apiFetch<Order>("/orders/", {
+                const created = await apiFetch<Order>("/orders/create-order/", {
                     method: "POST",
                     body: JSON.stringify({
                         customer_id: Number(customerId),

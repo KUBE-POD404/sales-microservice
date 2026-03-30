@@ -1,4 +1,5 @@
 services:
+
   mysql:
     image: mysql:8.4
     container_name: mysql-db
@@ -14,6 +15,17 @@ services:
       - mysql_data:/var/lib/mysql
     networks:
       - backend
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    restart: always
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - backend
+
   nginx:
     image: nginx:alpine
     container_name: nginx
@@ -33,14 +45,12 @@ services:
       - backend
 
   frontend:
-    build: ./sales-invoice-ui
-    container_name: sales-invoice-ui
+    build: ./sales-frontend-ui
+    container_name: sales-frontend-ui
     restart: always
-    env_file:
-      - ./sales-invoice-ui/.env.production
     networks:
       - backend
-    
+
   auth-service:
     build: ./sales-auth-service
     container_name: auth-service
@@ -50,6 +60,10 @@ services:
       - JWT_SECRET_KEY=${JWT_SECRET_KEY}
       - ACCESS_TOKEN_EXPIRE_MINUTES=${ACCESS_TOKEN_EXPIRE_MINUTES}
       - ENVIRONMENT=${ENVIRONMENT}
+      - SERVICE_NAME=auth-service
+    depends_on:
+      - rabbitmq
+      - mysql
     networks:
       - backend
 
@@ -61,6 +75,9 @@ services:
       - DATABASE_URL=${DATABASE_URL}
       - ENVIRONMENT=${ENVIRONMENT}
       - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - SERVICE_NAME=customer-service
+    depends_on:
+      - mysql
     networks:
       - backend
 
@@ -70,11 +87,15 @@ services:
     restart: always
     environment:
       - DATABASE_URL=${DATABASE_URL}
-      - CUSTOMER_SERVICE_URL=http://customer-service:8000
+      - CUSTOMER_SERVICE_URL=http://customer-service:3000
       - ENVIRONMENT=${ENVIRONMENT}
       - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - SERVICE_NAME=order-service
+      - API_VERSION=${API_VERSION}
     depends_on:
       - customer-service
+      - rabbitmq
+      - mysql
     networks:
       - backend
 
@@ -84,11 +105,14 @@ services:
     restart: always
     environment:
       - DATABASE_URL=${DATABASE_URL}
-      - ORDER_SERVICE_URL=http://order-service:8000
+      - ORDER_SERVICE_URL=http://order-service:3000
+      - API_VERSION=${API_VERSION}
       - ENVIRONMENT=${ENVIRONMENT}
       - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - SERVICE_NAME=invoice-service
     depends_on:
       - order-service
+      - mysql
     networks:
       - backend
 
@@ -98,11 +122,26 @@ services:
     restart: always
     environment:
       - DATABASE_URL=${DATABASE_URL}
-      - INVOICE_SERVICE_URL=http://invoice-service:8000
+      - INVOICE_SERVICE_URL=http://invoice-service:3000
       - ENVIRONMENT=${ENVIRONMENT}
       - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - SERVICE_NAME=payment-service
     depends_on:
       - invoice-service
+      - mysql
+    networks:
+      - backend
+
+  notification-service:
+    build: ./sales-notification-service
+    container_name: notification-service
+    restart: always
+    env_file:
+      - .env
+    environment:
+      - SERVICE_NAME=notification-service
+    depends_on:
+      - rabbitmq
     networks:
       - backend
 

@@ -1,8 +1,9 @@
 from app.core.logging_config import setup_logging
 import os
 from fastapi import FastAPI
-from app.routers.v1.auth import router as auth_router
+from app.routers.v1 import auth
 from fastapi.exceptions import RequestValidationError
+from app.core.middleware import RequestContextMiddleware
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from app.exceptions.handlers import (
     app_exception_handler,
@@ -31,9 +32,11 @@ app = FastAPI(
 )
 
 
+app.add_middleware(RequestContextMiddleware)
+
 app.add_exception_handler(AppException, app_exception_handler)
 app.add_exception_handler(StarletteHTTPException, http_exception_handler)
 app.add_exception_handler(RequestValidationError, validation_exception_handler)
 app.add_exception_handler(Exception, generic_exception_handler)
 
-app.include_router(auth_router)
+app.include_router(auth.router, prefix="/api/v1")

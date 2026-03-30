@@ -5,6 +5,8 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.routers.v1 import orders
 
+from app.core.middleware import RequestContextMiddleware
+
 from app.exceptions.custom_exceptions import AppException
 from app.exceptions.handlers import (
     app_exception_handler,
@@ -32,6 +34,8 @@ app = FastAPI(
     redoc_url=redoc_url,
     openapi_url=openapi_url,
 )
+
+app.add_middleware(RequestContextMiddleware)
 
 app.add_exception_handler(AppException, app_exception_handler)
 app.add_exception_handler(StarletteHTTPException, http_exception_handler)

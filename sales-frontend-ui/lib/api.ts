@@ -1,4 +1,4 @@
-const API_URL = "/api"
+const API_URL = "/api/v1"
 
 export async function apiFetch<T>(
   path: string,
