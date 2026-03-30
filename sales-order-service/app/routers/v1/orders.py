@@ -25,7 +25,7 @@ def health():
     return {"status": "ok"}
 
 
-@router.post("", response_model=OrderResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/create-order", response_model=OrderResponse, status_code=status.HTTP_201_CREATED)
 def create_order_api(
     data: OrderCreate,
     request: Request,
