@@ -6,7 +6,7 @@ metadata:
 spec:
   parentRefs:
   - name: sales-gateway
-    namespace: sales-test-ns
+    namespace: sales-gateway-ns
   rules:
   - matches:
     - path:
