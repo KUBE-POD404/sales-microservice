@@ -13,4 +13,6 @@ echo "Starting Celery worker..."
 
 celery -A app.core.celery_app worker \
   --loglevel=info \
-  -Q notification_queue
+  -Q notification_queue \
+  -n notification@%h \
+  --concurrency=2
