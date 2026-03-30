@@ -1,9 +1,9 @@
 import logging
 import os
 
-def setup_logging():
 
-    service_name = os.getenv("SERVICE_NAME", "auth-service")
+def setup_logging():
+    service_name = os.getenv("SERVICE_NAME", "order-service")
 
     logging.basicConfig(
         level=logging.INFO,
