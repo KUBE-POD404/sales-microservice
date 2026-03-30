@@ -9,6 +9,8 @@ from app.models.user_role import UserRole
 from app.models.permission import Permission
 from app.models.role_permission import RolePermission
 
+from app.core.celery_app import celery
+
 from app.security.password import hash_password, verify_password
 from app.security.jwt import create_access_token
 
@@ -22,13 +24,18 @@ from app.exceptions.custom_exceptions import (
 logger = logging.getLogger(__name__)
 
 
-def get_user_permissions(db: Session, organization_user_id: int):
+def get_user_permissions(db, user_id, org_id):
+
 
     permissions = (
         db.query(Permission.name)
         .join(RolePermission, RolePermission.permission_id == Permission.id)
         .join(UserRole, UserRole.role_id == RolePermission.role_id)
-        .filter(UserRole.organization_user_id == organization_user_id)
+        .join(OrganizationUser, OrganizationUser.id == UserRole.organization_user_id)
+        .filter(
+            OrganizationUser.user_id == user_id,
+            OrganizationUser.organization_id == org_id
+        )
         .all()
     )
 
@@ -84,45 +91,49 @@ def signup(db: Session, org_name: str, org_slug: str, email: str, password: str)
     )
     db.add(user_role)
 
-    # ✅ COMMIT FIRST
     db.commit()
 
     logger.info(f"User created user_id={user.id}, org_id={organization.id}")
 
-    permissions = get_user_permissions(db, organization_user.id)
+    permissions = get_user_permissions(db, user.id, organization.id)
 
     token = create_access_token({
         "user_id": user.id,
+        "email": user.email,
         "org_id": organization.id,
         "permissions": permissions
     })
 
     logger.info(f"Token generated for user_id={user.id}")
 
-    # ✅ EVENT PAYLOAD
     payload = {
-        "event_type": "USER_SIGNED_UP",
-        "data": {
+        "payload": {
             "user_id": user.id,
             "email": user.email,
             "organization_name": organization.name
         }
     }
 
-    # ✅ ASYNC NOTIFICATION
     try:
-        from app.tasks.notification_tasks import send_signup_email
-        send_signup_email.delay(payload)
+        celery.send_task(
+            "notification.send_signup_email",
+            args=[payload],
+            queue="notification_queue"
+        )
+
         logger.info(f"Signup notification event sent for user_id={user.id}")
 
     except Exception as e:
         logger.error(f"Notification failed for user_id={user.id}: {e}")
+
     return {
         "access_token": token,
         "user_id": user.id,
         "email": user.email,
         "organization_name": organization.name
     }
+
+
 
 
 # -------------------------
@@ -156,10 +167,11 @@ def login(db: Session, org_slug: str, email: str, password: str):
     if not organization_user:
         raise ForbiddenException("User not part of this organization")
 
-    permissions = get_user_permissions(db, organization_user.id)
+    permissions = get_user_permissions(db, user.id, organization.id)
 
     token = create_access_token({
         "user_id": user.id,
+        "email": user.email,
         "org_id": organization.id,
         "permissions": permissions
     })
