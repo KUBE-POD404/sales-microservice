@@ -56,7 +56,7 @@ export default function DashboardPage() {
         const [invoiceData, orderData, customerData] = await Promise.all([
           apiFetch<Invoice[]>("/invoices?limit=100"),
           apiFetch<Order[]>("/orders?limit=100"),
-          apiFetch<Customer[]>("/customers?limit=100"),
+          apiFetch<Customer[]>("/customers/?limit=100"),
         ])
 
         setInvoices(invoiceData)
