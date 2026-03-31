@@ -13,7 +13,7 @@ class RequestIdFilter(logging.Filter):
 
 
 def setup_logging():
-    service_name = os.getenv("SERVICE_NAME", "unknown-service")
+    service_name = os.getenv("SERVICE_NAME", "customer-service")
 
     handler = logging.StreamHandler(sys.stdout)
 
