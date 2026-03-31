@@ -83,7 +83,7 @@ export default function InvoicesPage() {
             })
 
             const invoiceData = await apiFetch<Invoice[]>(
-                `/invoices?${params.toString()}`
+                `/invoices/?${params.toString()}`
             )
 
             setInvoices(invoiceData)
