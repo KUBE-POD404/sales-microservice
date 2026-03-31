@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notification-deployment
+  namespace: sales-test-ns
+  labels:
+    app: notification
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: notification-microservice
+  template:
+    metadata:
+      labels:
+        app: notification-microservice
+    spec:
+      containers:
+        - name: notification-container
+          image: kubectlandchill/sales-notification-service:v1.0.1
+          ports:
+            - containerPort: 3000
+          envFrom:
+            - secretRef:
+                name: notification-secret
+            - secretRef:
+                name: backend-secret
+            - configMapRef:
+                name: backend-config
+          resources:
+            limits:
+              cpu: "200m"
+              memory: "512Mi"
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
