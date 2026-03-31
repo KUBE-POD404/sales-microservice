@@ -137,7 +137,7 @@ export default function OrdersPage() {
             const [ordersData, customersData, invoicesData] = await Promise.all([
                 apiFetch<Order[]>(`/orders/?${params.toString()}`),
                 apiFetch<Customer[]>("/customers/"),
-                apiFetch<Invoice[]>(`/invoices`)
+                apiFetch<Invoice[]>(`/invoices/`)
             ])
 
             setOrders(ordersData)
