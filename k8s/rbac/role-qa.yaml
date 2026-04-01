@@ -1,0 +1,9 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: qa-role
+  namespace: sales-test-ns
+rules:
+- apiGroups: ["", "apps"]
+  resources: ["pods", "services", "deployments", "replicasets"]
+  verbs: ["get", "list", "watch"]
